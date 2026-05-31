@@ -3,230 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>顏色潛意識心理測驗</title>
+    <title>色彩潛意識心理測驗 - 優化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .color-btn { transition: all 0.2s ease-in-out; }
-        .color-btn:hover { transform: scale(1.05); }
-        .selected-badge {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background-color: #1f2937;
+        .color-item { transition: all 0.3s ease; }
+        .color-item:active { transform: scale(0.98); }
+        .selected-ring { border: 4px solid #4f46e5 !important; }
+        .badge-number {
+            background-color: #4f46e5;
             color: white;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
+            border-radius: 9999px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(79, 70, 229, 0.4);
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800 font-sans p-4 md:p-8">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
 
-    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- 標頭 -->
-        <div class="bg-indigo-600 text-white p-6 text-center">
-            <h1 class="text-2xl font-bold mb-2">顏色潛意識心理測驗</h1>
-            <p class="text-indigo-100 text-sm">從下方挑選出 4 個你喜歡的顏色，並依喜好順序點擊！</p>
-        </div>
+    <div class="max-w-xl mx-auto min-h-screen flex flex-col">
+        <header class="p-6 pt-10 text-center">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">色彩潛意識測驗</h1>
+            <p class="text-slate-500 text-sm">依序選出 4 個你最喜歡的顏色</p>
+        </header>
 
-        <!-- 選擇區塊 -->
-        <div id="selection-area" class="p-6 md:p-8">
-            <p class="text-center text-gray-600 mb-6" id="instruction">請選擇第 <span id="current-step" class="font-bold text-indigo-600 text-xl">1</span> 個顏色 (共需選4個)</p>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="color-grid">
-                <!-- 顏色按鈕會由 JS 動態生成 -->
+        <main id="selection-area" class="flex-grow px-6 pb-10">
+            <div id="step-indicator" class="mb-6 bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center">
+                <p class="text-indigo-700 font-medium">請選取第 <span id="current-step" class="text-2xl font-bold">1</span> 個顏色</p>
             </div>
 
-            <div class="mt-8 text-center hidden" id="action-area">
-                <button id="submit-btn" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold hover:bg-indigo-700 transition shadow-lg w-full md:w-auto">
-                    開始解析
+            <div class="space-y-3" id="color-list">
+                </div>
+
+            <div id="action-area" class="mt-10 hidden space-y-4">
+                <button id="submit-btn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all">
+                    查看解析結果
                 </button>
-                <button id="reset-btn" class="mt-4 text-gray-500 hover:text-gray-700 underline text-sm block mx-auto">
-                    重新選擇
+                <button id="reset-btn" class="w-full text-slate-400 font-medium py-2 text-sm hover:text-slate-600 transition">
+                    清空重選
                 </button>
             </div>
-        </div>
+        </main>
 
-        <!-- 結果區塊 -->
-        <div id="result-area" class="p-6 md:p-8 hidden">
-            <h2 class="text-xl font-bold text-center mb-6 text-indigo-600">你的專屬解析</h2>
+        <section id="result-area" class="hidden px-6 pb-20">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-bold text-slate-900">你的解析報告</h2>
+                <button id="play-again-btn" class="text-indigo-600 font-bold text-sm bg-indigo-50 px-4 py-2 rounded-lg">再測一次</button>
+            </div>
             <div id="results-container" class="space-y-6">
-                <!-- 結果會由 JS 動態生成 -->
-            </div>
-            <div class="mt-8 text-center">
-                <button id="play-again-btn" class="bg-gray-200 text-gray-700 px-8 py-3 rounded-full font-bold hover:bg-gray-300 transition w-full md:w-auto">
-                    再測一次
-                </button>
-            </div>
-        </div>
+                </div>
+        </section>
     </div>
 
     <script>
         const colorData = {
-            "白色": { hex: "#FFFFFF", border: "border-gray-300", 
-                answers: [
-                    "情感表現比較豐富，內心柔軟且敏感，容易有情緒化的現象，同時也是一個溫柔的人，常專注於一些細碎的瑣事。",
-                    "常會在不知不覺的時候，有孩子氣耍賴，無形之中得罪別人。",
-                    "容易因為失敗的經驗而卻步，過於消極的想法拖著後腿。",
-                    "找尋會引領你的好搭檔，一同往新的事物、方向挑戰。"
-                ]
-            },
-            "紅色": { hex: "#EF4444", border: "border-transparent",
-                answers: [
-                    "勝負欲極強，且有著不服輸的個性，同時有著滿滿的活力，對於想做的事情，一旦下定決心就會全力去達成。",
-                    "容易執著在過去的事情，並對事情過於斤斤計較，太過的功利主義容易阻礙自身發展。",
-                    "擁有強大的自信和幹勁，相信一切事情都能辦好。",
-                    "試著去做別人不敢做的事，挑戰所有事物，凡事要以積極的態度面對，會走得更高更遠。"
-                ]
-            },
-            "橘色": { hex: "#F97316", border: "border-transparent",
-                answers: [
-                    "喜歡穩定的事物，不喜歡冒險，不過性格很爽朗，是一個謹慎且附有責任心的人。",
-                    "因過份在意他人的想法，而不敢說出自己的主意，且因有失敗經驗後容易對事情產生疑懼。",
-                    "對於慾望控制得宜，透過冷靜的面對事物，順暢的處理各種事情。",
-                    "容易因為心情而影響狀態，務必控制調節好自己的情緒。"
-                ]
-            },
-            "黃色": { hex: "#EAB308", border: "border-transparent",
-                answers: [
-                    "性格沉穩且較為冷靜，雖然平時較為消極，不過一旦想做，會很有毅力且主動積極。",
-                    "對瑣事過分謹慎地去思考，容易把小細節放大，因此造成時間的浪費。",
-                    "面對困難也會明智的思考，優秀的處理表現也展現在大眾面前。",
-                    "好好發揮出自己的個性，你擁有強大的適應力，可以展現出自己的優點。"
-                ]
-            },
-            "綠色": { hex: "#22C55E", border: "border-transparent",
-                answers: [
-                    "具有理性判斷事情的能力，但在行動中又帶有直爽，具有良好的領導能力。",
-                    "拖延症嚴重，導致常常把應該做的事，拖到最後一刻才完成，也因此此臨時狀況總是特別多。",
-                    "對於事情有自己的判斷，做事懂得適可而止，若是認為做不到或無理的事，就會選擇迴避。",
-                    "執著於過往的事情，錯失機會，過於沉著讓你無法得到重視，可以適當的跨出步伐，走出舒適圈。"
-                ]
-            },
-            "藍色": { hex: "#3B82F6", border: "border-transparent",
-                answers: [
-                    "是一個外表冷酷，內心卻相當溫暖的人，對人非常的溫柔，不過卻又容易感到孤獨。",
-                    "太熱衷於別人的事，總是將別人的事擺在第一位，同時也非常期望別人對你的認可。",
-                    "面對事情總有一種提不起勁的感覺，對任何東西都無法產生慾望。",
-                    "可以多嘗試不同的興趣及職業，新的領域更能展現出你的才能。"
-                ]
-            },
-            "紫色": { hex: "#A855F7", border: "border-transparent",
-                answers: [
-                    "具有與生俱來的性格魅力，個性開朗，不過經常對事情三分鐘熱度，一旦被什麼事吸引就一頭栽入。",
-                    "不順心的狀況特別的多，即便努力達成，總會有許多阻礙擋著。",
-                    "表面無所謂，其實內心有很多擔心，壓力很大，總是特別敏感。",
-                    "多多與人合作，更能發揮你的創意性，得到更好的成功機會。"
-                ]
-            }
+            "白色": { hex: "#FFFFFF", text: "text-slate-700", border: "border-slate-200", answers: ["情感表現比較豐富，內心柔軟且敏感，容易有情緒化的現象。", "常會在不知不覺的時候，有孩子氣耍賴，無形之中得罪別人。", "容易因為失敗的經驗而卻步，過於消極的想法拖著後腿。", "找尋會引領你的好搭檔，一同往新的事物、方向挑戰。"] },
+            "紅色": { hex: "#EF4444", text: "text-white", border: "border-transparent", answers: ["勝負欲極強，且有著不服輸的個性，活力滿滿。", "容易執著在過去的事情，太過功利主義容易阻礙自身發展。", "擁有強大的自信和幹勁，相信一切事情都能辦好。", "試著去做別人不敢做的事，以積極的態度面對。"] },
+            "橘色": { hex: "#F97316", text: "text-white", border: "border-transparent", answers: ["喜歡穩定的事物，不喜歡冒險，是一個謹慎且有責任心的人。", "因過份在意他人的想法，而不敢說出自己的主意。", "對於慾望控制得宜，透過冷靜的面對事物，順暢處理各事。", "容易因為心情而影響狀態，務必控制調節好自己的情緒。"] },
+            "黃色": { hex: "#FACC15", text: "text-slate-800", border: "border-transparent", answers: ["性格沉穩且冷靜，一旦想做，會很有毅力且主動積極。", "對瑣事過分謹慎，容易把小細節放大，造成時間浪費。", "面對困難也會明智的思考，優秀處理表現展現在大眾面前。", "好好發揮出自己的個性，你擁有強大的適應力。"] },
+            "綠色": { hex: "#22C55E", text: "text-white", border: "border-transparent", answers: ["具有理性判斷能力，行動直爽，具有良好的領導能力。", "拖延症嚴重，常把應該做的事，拖到最後一刻才完成。", "對事情有自己的判斷，做事懂得適可而止。", "適當跨出步伐，走出舒適圈。"] },
+            "藍色": { hex: "#3B82F6", text: "text-white", border: "border-transparent", answers: ["外表冷酷，內心溫暖的人，對人溫柔，但容易感到孤獨。", "太熱衷於別人的事，期望別人對你的認可。", "對任何東西都無法產生慾望，有一種提不起勁的感覺。", "多嘗試不同的興趣及職業，展現你的才能。"] },
+            "紫色": { hex: "#A855F7", text: "text-white", border: "border-transparent", answers: ["具有與生俱來的性格魅力，個性開朗。", "不順心的狀況特別多，總會有許多阻礙擋著。", "表面無所謂，其實內心壓力很大，特別敏感。", "多多與人合作，更能發揮你的創意性。"] }
         };
 
-        const stages = [
-            "第一個顏色選擇：你的潛在性格",
-            "第二個顏色選擇：目前遇到的人生障礙",
-            "第三個顏色選擇：你的心理狀態",
-            "第四個顏色選擇：有幫助的建議和方向"
-        ];
+        const stages = ["第一個顏色：潛在性格", "第二個顏色：目前障礙", "第三個顏色：心理狀態", "第四個顏色：建議方向"];
+        let selected = [];
 
-        let selectedColors = [];
+        function render() {
+            const list = document.getElementById('color-list');
+            list.innerHTML = '';
+            Object.keys(colorData).forEach(name => {
+                const info = colorData[name];
+                const index = selected.indexOf(name);
+                const isSelected = index !== -1;
 
-        function renderColors() {
-            const grid = document.getElementById('color-grid');
-            grid.innerHTML = '';
-            
-            Object.keys(colorData).forEach(colorName => {
-                const colorInfo = colorData[colorName];
-                const isSelected = selectedColors.includes(colorName);
-                const orderIndex = selectedColors.indexOf(colorName) + 1;
-
-                const btn = document.createElement('button');
-                btn.className = `color-btn relative w-full h-24 rounded-xl shadow-sm border-2 ${colorInfo.border} flex items-center justify-center text-lg font-bold ${colorName === '白色' ? 'text-gray-700' : 'text-white'} ${isSelected ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md cursor-pointer'}`;
-                btn.style.backgroundColor = colorInfo.hex;
-                btn.innerText = colorName;
-
-                if (isSelected) {
-                    const badge = document.createElement('div');
-                    badge.className = 'selected-badge';
-                    badge.innerText = orderIndex;
-                    btn.appendChild(badge);
-                }
-
-                btn.onclick = () => handleColorClick(colorName);
-                grid.appendChild(btn);
+                const row = document.createElement('div');
+                row.className = `color-item flex items-center justify-between p-5 rounded-2xl cursor-pointer shadow-sm border-2 ${info.border} ${isSelected ? 'opacity-50' : 'bg-white'}`;
+                row.style.backgroundColor = isSelected ? '#f1f5f9' : info.hex;
+                if (!isSelected) row.classList.add(info.text);
+                
+                row.innerHTML = `
+                    <span class="text-lg font-bold">${name}</span>
+                    ${isSelected ? `<div class="badge-number">${index + 1}</div>` : '<div class="w-8 h-8 rounded-full border-2 border-slate-200"></div>'}
+                `;
+                
+                row.onclick = () => {
+                    if (isSelected) {
+                        selected = selected.filter(n => n !== name);
+                    } else if (selected.length < 4) {
+                        selected.push(name);
+                    }
+                    render();
+                };
+                list.appendChild(row);
             });
 
-            updateUI();
-        }
-
-        function handleColorClick(colorName) {
-            if (selectedColors.includes(colorName)) {
-                selectedColors = selectedColors.filter(c => c !== colorName);
-            } else if (selectedColors.length < 4) {
-                selectedColors.push(colorName);
-            }
-            renderColors();
-        }
-
-        function updateUI() {
-            const instruction = document.getElementById('instruction');
-            const currentStep = document.getElementById('current-step');
-            const actionArea = document.getElementById('action-area');
-
-            if (selectedColors.length === 4) {
-                instruction.innerHTML = "已選滿 4 個顏色！請點擊開始解析。";
-                actionArea.classList.remove('hidden');
+            const step = document.getElementById('current-step');
+            const action = document.getElementById('action-area');
+            step.innerText = selected.length + 1;
+            
+            if (selected.length === 4) {
+                document.getElementById('step-indicator').classList.add('bg-green-50', 'border-green-100');
+                document.getElementById('step-indicator').innerHTML = '<p class="text-green-700 font-bold">選取完成！請點擊下方按鈕</p>';
+                action.classList.remove('hidden');
             } else {
-                instruction.innerHTML = `請選擇第 <span class="font-bold text-indigo-600 text-xl">${selectedColors.length + 1}</span> 個顏色 (共需選4個)`;
-                actionArea.classList.add('hidden');
+                document.getElementById('step-indicator').className = 'mb-6 bg-indigo-50 border-indigo-100 rounded-2xl p-4 text-center';
+                document.getElementById('step-indicator').innerHTML = `<p class="text-indigo-700 font-medium">請選取第 <span id="current-step" class="text-2xl font-bold">${selected.length + 1}</span> 個顏色</p>`;
+                action.classList.add('hidden');
             }
         }
 
-        function showResults() {
+        document.getElementById('submit-btn').onclick = () => {
             document.getElementById('selection-area').classList.add('hidden');
             document.getElementById('result-area').classList.remove('hidden');
+            window.scrollTo(0, 0);
             
             const container = document.getElementById('results-container');
             container.innerHTML = '';
-
-            selectedColors.forEach((colorName, index) => {
-                const stageTitle = stages[index];
-                const answerText = colorData[colorName].answers[index];
-                const colorHex = colorData[colorName].hex;
-
+            selected.forEach((name, i) => {
                 const card = document.createElement('div');
-                card.className = "bg-gray-50 rounded-lg p-4 border-l-4 shadow-sm";
-                card.style.borderLeftColor = colorHex === "#FFFFFF" ? "#d1d5db" : colorHex;
-
+                card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden";
                 card.innerHTML = `
-                    <div class="flex items-center mb-2">
-                        <span class="w-4 h-4 rounded-full mr-2 border border-gray-300" style="background-color: ${colorHex}"></span>
-                        <h3 class="font-bold text-gray-700">${stageTitle} (${colorName})</h3>
+                    <div class="absolute top-0 left-0 w-2 h-full" style="background-color: ${colorData[name].hex}"></div>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">${stages[i]}</h3>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xl font-bold text-slate-800">${name}</span>
                     </div>
-                    <p class="text-gray-600 text-sm leading-relaxed">${answerText}</p>
+                    <p class="text-slate-600 leading-relaxed text-sm">${colorData[name].answers[i]}</p>
                 `;
                 container.appendChild(card);
             });
-        }
+        };
 
-        function resetTest() {
-            selectedColors = [];
-            document.getElementById('selection-area').classList.remove('hidden');
-            document.getElementById('result-area').classList.add('hidden');
-            renderColors();
-        }
+        const reset = () => { selected = []; render(); document.getElementById('selection-area').classList.remove('hidden'); document.getElementById('result-area').classList.add('hidden'); };
+        document.getElementById('reset-btn').onclick = reset;
+        document.getElementById('play-again-btn').onclick = reset;
 
-        document.getElementById('submit-btn').addEventListener('click', showResults);
-        document.getElementById('reset-btn').addEventListener('click', resetTest);
-        document.getElementById('play-again-btn').addEventListener('click', resetTest);
-
-        // 初始化
-        renderColors();
+        render();
     </script>
 </body>
 </html>
+
+這份新版本已經優化了行動裝置的體驗，您可以直接複製後重新上傳到 GitHub，Vercel 會自動為您更新！如果有任何細節想調整，隨時告訴我。
