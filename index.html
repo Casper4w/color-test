@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顏色潛意識心理測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .color-btn { transition: all 0.2s ease-in-out; }
+        .color-btn:hover { transform: scale(1.05); }
+        .selected-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #1f2937;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans p-4 md:p-8">
+
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- 標頭 -->
+        <div class="bg-indigo-600 text-white p-6 text-center">
+            <h1 class="text-2xl font-bold mb-2">顏色潛意識心理測驗</h1>
+            <p class="text-indigo-100 text-sm">從下方挑選出 4 個你喜歡的顏色，並依喜好順序點擊！</p>
+        </div>
+
+        <!-- 選擇區塊 -->
+        <div id="selection-area" class="p-6 md:p-8">
+            <p class="text-center text-gray-600 mb-6" id="instruction">請選擇第 <span id="current-step" class="font-bold text-indigo-600 text-xl">1</span> 個顏色 (共需選4個)</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="color-grid">
+                <!-- 顏色按鈕會由 JS 動態生成 -->
+            </div>
+
+            <div class="mt-8 text-center hidden" id="action-area">
+                <button id="submit-btn" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold hover:bg-indigo-700 transition shadow-lg w-full md:w-auto">
+                    開始解析
+                </button>
+                <button id="reset-btn" class="mt-4 text-gray-500 hover:text-gray-700 underline text-sm block mx-auto">
+                    重新選擇
+                </button>
+            </div>
+        </div>
+
+        <!-- 結果區塊 -->
+        <div id="result-area" class="p-6 md:p-8 hidden">
+            <h2 class="text-xl font-bold text-center mb-6 text-indigo-600">你的專屬解析</h2>
+            <div id="results-container" class="space-y-6">
+                <!-- 結果會由 JS 動態生成 -->
+            </div>
+            <div class="mt-8 text-center">
+                <button id="play-again-btn" class="bg-gray-200 text-gray-700 px-8 py-3 rounded-full font-bold hover:bg-gray-300 transition w-full md:w-auto">
+                    再測一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colorData = {
+            "白色": { hex: "#FFFFFF", border: "border-gray-300", 
+                answers: [
+                    "情感表現比較豐富，內心柔軟且敏感，容易有情緒化的現象，同時也是一個溫柔的人，常專注於一些細碎的瑣事。",
+                    "常會在不知不覺的時候，有孩子氣耍賴，無形之中得罪別人。",
+                    "容易因為失敗的經驗而卻步，過於消極的想法拖著後腿。",
+                    "找尋會引領你的好搭檔，一同往新的事物、方向挑戰。"
+                ]
+            },
+            "紅色": { hex: "#EF4444", border: "border-transparent",
+                answers: [
+                    "勝負欲極強，且有著不服輸的個性，同時有著滿滿的活力，對於想做的事情，一旦下定決心就會全力去達成。",
+                    "容易執著在過去的事情，並對事情過於斤斤計較，太過的功利主義容易阻礙自身發展。",
+                    "擁有強大的自信和幹勁，相信一切事情都能辦好。",
+                    "試著去做別人不敢做的事，挑戰所有事物，凡事要以積極的態度面對，會走得更高更遠。"
+                ]
+            },
+            "橘色": { hex: "#F97316", border: "border-transparent",
+                answers: [
+                    "喜歡穩定的事物，不喜歡冒險，不過性格很爽朗，是一個謹慎且附有責任心的人。",
+                    "因過份在意他人的想法，而不敢說出自己的主意，且因有失敗經驗後容易對事情產生疑懼。",
+                    "對於慾望控制得宜，透過冷靜的面對事物，順暢的處理各種事情。",
+                    "容易因為心情而影響狀態，務必控制調節好自己的情緒。"
+                ]
+            },
+            "黃色": { hex: "#EAB308", border: "border-transparent",
+                answers: [
+                    "性格沉穩且較為冷靜，雖然平時較為消極，不過一旦想做，會很有毅力且主動積極。",
+                    "對瑣事過分謹慎地去思考，容易把小細節放大，因此造成時間的浪費。",
+                    "面對困難也會明智的思考，優秀的處理表現也展現在大眾面前。",
+                    "好好發揮出自己的個性，你擁有強大的適應力，可以展現出自己的優點。"
+                ]
+            },
+            "綠色": { hex: "#22C55E", border: "border-transparent",
+                answers: [
+                    "具有理性判斷事情的能力，但在行動中又帶有直爽，具有良好的領導能力。",
+                    "拖延症嚴重，導致常常把應該做的事，拖到最後一刻才完成，也因此此臨時狀況總是特別多。",
+                    "對於事情有自己的判斷，做事懂得適可而止，若是認為做不到或無理的事，就會選擇迴避。",
+                    "執著於過往的事情，錯失機會，過於沉著讓你無法得到重視，可以適當的跨出步伐，走出舒適圈。"
+                ]
+            },
+            "藍色": { hex: "#3B82F6", border: "border-transparent",
+                answers: [
+                    "是一個外表冷酷，內心卻相當溫暖的人，對人非常的溫柔，不過卻又容易感到孤獨。",
+                    "太熱衷於別人的事，總是將別人的事擺在第一位，同時也非常期望別人對你的認可。",
+                    "面對事情總有一種提不起勁的感覺，對任何東西都無法產生慾望。",
+                    "可以多嘗試不同的興趣及職業，新的領域更能展現出你的才能。"
+                ]
+            },
+            "紫色": { hex: "#A855F7", border: "border-transparent",
+                answers: [
+                    "具有與生俱來的性格魅力，個性開朗，不過經常對事情三分鐘熱度，一旦被什麼事吸引就一頭栽入。",
+                    "不順心的狀況特別的多，即便努力達成，總會有許多阻礙擋著。",
+                    "表面無所謂，其實內心有很多擔心，壓力很大，總是特別敏感。",
+                    "多多與人合作，更能發揮你的創意性，得到更好的成功機會。"
+                ]
+            }
+        };
+
+        const stages = [
+            "第一個顏色選擇：你的潛在性格",
+            "第二個顏色選擇：目前遇到的人生障礙",
+            "第三個顏色選擇：你的心理狀態",
+            "第四個顏色選擇：有幫助的建議和方向"
+        ];
+
+        let selectedColors = [];
+
+        function renderColors() {
+            const grid = document.getElementById('color-grid');
+            grid.innerHTML = '';
+            
+            Object.keys(colorData).forEach(colorName => {
+                const colorInfo = colorData[colorName];
+                const isSelected = selectedColors.includes(colorName);
+                const orderIndex = selectedColors.indexOf(colorName) + 1;
+
+                const btn = document.createElement('button');
+                btn.className = `color-btn relative w-full h-24 rounded-xl shadow-sm border-2 ${colorInfo.border} flex items-center justify-center text-lg font-bold ${colorName === '白色' ? 'text-gray-700' : 'text-white'} ${isSelected ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md cursor-pointer'}`;
+                btn.style.backgroundColor = colorInfo.hex;
+                btn.innerText = colorName;
+
+                if (isSelected) {
+                    const badge = document.createElement('div');
+                    badge.className = 'selected-badge';
+                    badge.innerText = orderIndex;
+                    btn.appendChild(badge);
+                }
+
+                btn.onclick = () => handleColorClick(colorName);
+                grid.appendChild(btn);
+            });
+
+            updateUI();
+        }
+
+        function handleColorClick(colorName) {
+            if (selectedColors.includes(colorName)) {
+                selectedColors = selectedColors.filter(c => c !== colorName);
+            } else if (selectedColors.length < 4) {
+                selectedColors.push(colorName);
+            }
+            renderColors();
+        }
+
+        function updateUI() {
+            const instruction = document.getElementById('instruction');
+            const currentStep = document.getElementById('current-step');
+            const actionArea = document.getElementById('action-area');
+
+            if (selectedColors.length === 4) {
+                instruction.innerHTML = "已選滿 4 個顏色！請點擊開始解析。";
+                actionArea.classList.remove('hidden');
+            } else {
+                instruction.innerHTML = `請選擇第 <span class="font-bold text-indigo-600 text-xl">${selectedColors.length + 1}</span> 個顏色 (共需選4個)`;
+                actionArea.classList.add('hidden');
+            }
+        }
+
+        function showResults() {
+            document.getElementById('selection-area').classList.add('hidden');
+            document.getElementById('result-area').classList.remove('hidden');
+            
+            const container = document.getElementById('results-container');
+            container.innerHTML = '';
+
+            selectedColors.forEach((colorName, index) => {
+                const stageTitle = stages[index];
+                const answerText = colorData[colorName].answers[index];
+                const colorHex = colorData[colorName].hex;
+
+                const card = document.createElement('div');
+                card.className = "bg-gray-50 rounded-lg p-4 border-l-4 shadow-sm";
+                card.style.borderLeftColor = colorHex === "#FFFFFF" ? "#d1d5db" : colorHex;
+
+                card.innerHTML = `
+                    <div class="flex items-center mb-2">
+                        <span class="w-4 h-4 rounded-full mr-2 border border-gray-300" style="background-color: ${colorHex}"></span>
+                        <h3 class="font-bold text-gray-700">${stageTitle} (${colorName})</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm leading-relaxed">${answerText}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function resetTest() {
+            selectedColors = [];
+            document.getElementById('selection-area').classList.remove('hidden');
+            document.getElementById('result-area').classList.add('hidden');
+            renderColors();
+        }
+
+        document.getElementById('submit-btn').addEventListener('click', showResults);
+        document.getElementById('reset-btn').addEventListener('click', resetTest);
+        document.getElementById('play-again-btn').addEventListener('click', resetTest);
+
+        // 初始化
+        renderColors();
+    </script>
+</body>
+</html>
